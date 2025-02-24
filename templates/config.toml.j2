@@ -1,0 +1,592 @@
+# managed by Ansible
+# this file configures runners for Gitlab
+# https://docs.gitlab.com/runner/configuration/advanced-configuration.html
+#
+{% if gitlab_runner.concurrent is defined %}
+# Limits how many jobs can run concurrently, across all registered runners. Each [[runners]] section can define its own limit, but this value sets a maximum for all of those values combined. For example, a value of 10 means no more than 10 jobs can run concurrently. 0 is forbidden. If you use this value, the runner process exits with a critical error. View how this setting works with the Docker Machine, Instance, and Docker Autoscaler executors.
+concurrent = {{ gitlab_runner.concurrent }}
+{% endif %}
+{% if gitlab_runner.log_level is defined %}
+ # Defines the log level. Options are debug, info, warn, error, fatal, and panic. This setting has lower priority than the level set by the command-line arguments --debug, -l, or --log-level.
+log_level = "{{ gitlab_runner.log_level }}"
+{% endif %}
+{% if gitlab_runner.log_format is defined %}
+# Specifies the log format. Options are runner, text, and json. This setting has lower priority than the format set by command-line argument --log-format. The default value is runner, which contains ANSI escape codes for coloring.
+log_format = "{{ gitlab_runner.log_format }}"
+{% endif %}
+{% if gitlab_runner.check_interval is defined %}
+# Defines the interval length, in seconds, between the runner checking for new jobs. The default value is 3. If set to 0 or lower, the default value is used.
+check_interval = {{ gitlab_runner.check_interval }}
+{% endif %}
+{% if gitlab_runner.sentry_dsn is defined %}
+# Enables tracking of all system level errors to Sentry.
+sentry_dsn = "{{ gitlab_runner.sentry_dsn }}"
+{% endif %}
+{% if gitlab_runner.connection_max_age is defined %}
+# The maximum duration a TLS keepalive connection to the GitLab server should remain open before reconnecting. The default value is 15m for 15 minutes. If set to 0 or lower, the connection persists as long as possible.
+connection_max_age = "{{ gitlab_runner.connection_max_age }}"
+{% endif %}
+{% if gitlab_runner.listen_address is defined %}
+# Defines an address (<host>:<port>) the Prometheus metrics HTTP server should listen on.
+listen_address = "{{ gitlab_runner.listen_address }}"
+{% endif %}
+{% if gitlab_runner.shutdown_timeout is defined %}
+# Number of seconds until the forceful shutdown operation times out and exits the process. The default value is 30. If set to 0 or lower, the default value is used.
+shutdown_timeout = {{ gitlab_runner.shutdown_timeout }}
+{% endif %}
+{% if gitlab_runner.session_server_listen_address is defined  %}
+# To interact with jobs, specify the [session_server] section at the root level, outside the [[runners]] section. Configure this section once for all runners, not for each individual runner.
+[session_server]
+# An internal URL for the session server.
+listen_address = "{{ gitlab_runner.session_server_listen_address }}"
+{% if gitlab_runner.session_server_advertise_address is defined %}
+# The URL to access the session server. GitLab Runner exposes it to GitLab. If not defined, listen_address is used.
+advertise_address = "{{ gitlab_runner.session_server_advertise_address }}"
+{% endif %}
+{% if gitlab_runner.session_server_session_timeout is defined %}
+# Number of seconds the session can stay active after the job completes. The timeout blocks the job from finishing. Default is 1800 (30 minutes).
+session_timeout = {{ gitlab_runner.session_server_session_timeout }}
+{% endif %}
+{% endif %}
+ 
+{% for runner in gitlab_runner.runners %}
+# Each [[runners]] section defines one runner.
+[[runners]]
+{% if runner.name is defined %}
+# The runner’s description. Informational only.
+name = "{{ runner.name}}"
+{% endif %}
+# GitLab instance URL.
+url = "{{ runner.url }}"
+# The runner’s authentication token, which is obtained during runner registration. Not the same as the registration token.
+token = "{{ runner.token }}" 
+{% if runner.tls_ca_file is defined %}
+# When using HTTPS, file that contains the certificates to verify the peer. See Self-signed certificates or custom Certification Authorities documentation.
+tls-ca-file = "{{ runner.tls_ca_file }}"
+{% endif %}
+{% if runner.tls_cert_file is defined %}
+# When using HTTPS, file that contains the certificate to authenticate with the peer.
+tls-cert-file = "{{ runner.tls_cert_file }}"
+{% endif %}
+{% if runner.tls_key_file is defined %}
+# When using HTTPS, file that contains the private key to authenticate with the peer.
+tls-key-file = "{{ runner.tls_key_file }}"
+{% endif %}
+{% if runner.limit is defined %}
+# Limit how many jobs can be handled concurrently by this registered runner. 0 (default) means do not limit. View how this setting works with the Docker Machine, Instance, and Docker Autoscaler executors.
+limit = {{ runner.limit }}
+{% endif %}
+{% if runner.executor is defined %}
+# The environment or command processor on the host operating system that the runner uses to run a CI/CD job. For more information, see executors.
+executor = "{{ runner.executor }}"
+{% endif %}
+{% if runner.shell is defined %}
+# Name of shell to generate the script. Default value is platform dependent.
+shell = "{{ runner.shell }}"
+{% endif %}
+{% if runner.builds_dir is defined %}
+# Absolute path to a directory where builds are stored in the context of the selected executor. For example, locally, Docker, or SSH.
+builds_dir = "{{ runner.builds_dir }}"
+{% endif %}
+{% if runner.cache_dir is defined %}
+# Absolute path to a directory where build caches are stored in context of selected executor. For example, locally, Docker, or SSH. If the docker executor is used, this directory needs to be included in its volumes parameter.
+cache_dir = "{{ cache_dir }}"
+{% endif %}
+{% if runner.environment is defined %}
+# Append or overwrite environment variables.
+environment = {{ runner.environment }}
+{% endif %}
+{% if runner.request_concurrency is defined %}
+# Limit number of concurrent requests for new jobs from GitLab. Default is 1.
+request_concurrency = {{ runner.request_concurrency }}
+{% endif %}
+{% if runner.output_limit is defined %}
+# Maximum build log size in kilobytes. Default is 4096 (4 MB).
+output_limit = {{ runner.output_limit }}
+{% endif %}
+{% if runner.pre_get_sources_script is defined %}
+# Commands to be executed on the runner before updating the Git repository and updating submodules. Use it to adjust the Git client configuration first, for example. To insert multiple commands, use a (triple-quoted) multi-line string or \n character.
+pre_get_sources_script = "{{ runner.pre_get_sources_script }}"
+{% endif %}
+{% if runner.post_get_sources_script is defined %}
+# Commands to be executed on the runner after updating the Git repository and updating submodules. To insert multiple commands, use a (triple-quoted) multi-line string or \n character.
+post_get_sources_script = "{{ runner.post_get_sources_script }}"
+{% endif %}
+{% if runner.pre_build_script is defined %}
+# Commands to be executed on the runner before executing the job. To insert multiple commands, use a (triple-quoted) multi-line string or \n character.
+pre_build_script = "{{ runner.pre_build_script }}"
+{% endif %}
+{% if runner.post_build_script is defined %}
+# Commands to be executed on the runner just after executing the job, but before executing after_script. To insert multiple commands, use a (triple-quoted) multi-line string or \n character.
+post_build_script = "{{ runner.post_build_script }}"
+{% endif %}
+{% if runner.clone_url is defined %}
+# Overwrite the URL for the GitLab instance. Used only if the runner can’t connect to the GitLab URL.
+clone_url = "{{ runner.clone_url }}"
+{% endif %}
+{% if runner.debug_trace_disabled is defined %}
+# Disables debug tracing. When set to true, the debug log (trace) remains disabled even if CI_DEBUG_TRACE is set to true.
+debug_trace_disabled = {{ runner.debug_trace_disabled }}
+{% endif %}
+{% if runner.referees is defined %}
+# Extra job monitoring workers that pass their results as job artifacts to GitLab.
+referees = "{{ runner.referees }}"
+{% endif %}
+{% if runner.unhealthy_requests_limit is defined %}
+# The number of unhealthy responses to new job requests after which a runner worker is disabled.
+unhealthy_requests_limit = {{ runner.unhealthy_requests_limit }}
+{% endif %}
+{% if runner.unhealthy_interval is defined %}
+# Duration that a runner worker is disabled for after it exceeds the unhealthy requests limit. Supports syntax like ‘3600 s’, ‘1 h 30 min’ etc.
+unhealthy_interval = {{ runner.unhealthy_interval }}
+{% endif %}
+{% if runner.job_status_final_update_retry_limit is defined %}
+# The maximum number of times GitLab Runner can retry to push the final job status to the GitLab instance.
+job_status_final_update_retry_limit = {{ runner.job_status_final_update_retry_limit }}
+{% endif %}
+ 
+# The following settings define the Docker container parameters. These settings are applicable when the runner is configured to use the Docker executor.
+[runners.docker]
+{% if runner.runners_docker_allowed_images is defined %}
+# Wildcard list of images that can be specified in the .gitlab-ci.yml file. If not present, all images are allowed (equivalent to ["*/*:*"]). Use with the Docker or Kubernetes executors.
+allowed_images = {{ runner.runners_docker_allowed_images }}
+{% endif %}
+{% if runner.runners_docker_allowed_privileged_images is defined %}
+# Wildcard subset of allowed_images that runs in privileged mode when privileged is enabled. If not present, all images are allowed (equivalent to ["*/*:*"]). Use with the Docker executors.
+allowed_privileged_images = {{ runner.runners_docker_allowed_privileged_images }}
+{% endif %}
+{% if runner.runners_docker_allowed_pull_policies is defined %}
+# List of pull policies that can be specified in the .gitlab-ci.yml file or the config.toml file. If not specified, only the pull policies specified in pull-policy are allowed. Use with the Docker executor.
+allowed_pull_policies = {{ runner.runners_docker_allowed_pull_policies }}
+{% endif %}
+{% if gitlab_runner.allowed_services is defined %}
+# Wildcard list of services that can be specified in the .gitlab-ci.yml file. If not present, all images are allowed (equivalent to ["*/*:*"]). Use with the Docker or Kubernetes executors.
+allowed_services = {{ runner.runners_docker_allowed_services }}
+{% endif %}
+{% if runner.runners_allowed_privileged_services is defined %}
+# Wildcard subset of allowed_services that is allowed to run in privileged mode, when privileged or services_privileged is enabled. If not present, all images are allowed (equivalent to ["*/*:*"]). Use with the Docker executors.
+allowed_privileged_services: {{ runner.runners_allowed_privileged_services }}
+{% endif %}
+{% if runner.runners_docker_cache_dir is defined %}
+# Directory where Docker caches should be stored. This path can be absolute or relative to current working directory. See disable_cache for more information.
+cache_dir = "{{ runner.runners_docker_cache_dir }}"
+{% endif %}
+{% if runner.runners_docker_cap_add is defined %}
+# Add additional Linux capabilities to the container.
+cap_add = {{ runner.runners_docker_cap_add }}
+{% endif %}
+{% if runner.runners_docker_cap_drop is defined %}
+# Drop additional Linux capabilities from the container.
+cap_drop = {{ runner.runners_docker_cap_drop }}
+{% endif %}
+{% if runner.runners_docker_cpuset_cpus is defined %}
+# The control group’s CpusetCpus. A string.
+cpuset_cups = "{{ runner.runners_docker_cpuset_cpus }}"
+{% endif %}
+{% if runner.runners_docker_cpuset_mems is defined %}
+# The control group’s CpusetMems. A string.
+cpuset_mems = "{{ runner.runners_docker_cpuset_mems }}"
+{% endif %}
+{% if runner.runners_docker_cpu_shares is defined %}
+# Number of CPU shares used to set relative CPU usage. Default is 1024.
+cpu_shares = {{ runner.runners_docker_cpu_shares }}
+{% endif %}
+{% if runner.runners_docker_cpus is defined %}
+# Number of CPUs (available in Docker 1.13 or later). A string.
+cpus = "{{ runner.runners_docker_cpus }}"
+{% endif %}
+{% if runner.runners_docker_devices is defined %}
+# Share additional host devices with the container.
+devices = {{ runner.runners_docker_devices }}
+{% endif %}
+{% if runner.runners_docker_device_cgroup_rules is defined %}
+# Custom device cgroup rules (available in Docker 1.28 or later).
+device_cgroup_rules = {{ runner.runners_docker_device_cgroup_rules }}
+{% endif %}
+{% if runner.runners_docker_disable_cache is defined %}
+# The Docker executor has two levels of caching: a global one (like any other executor) and a local cache based on Docker volumes. This configuration flag acts only on the local one which disables the use of automatically created (not mapped to a host directory) cache volumes. In other words, it only prevents creating a container that holds temporary files of builds, it does not disable the cache if the runner is configured in distributed cache mode.
+disable_cache = {{ runner.runners_docker_disable_cache | string | map('lower') | join }}
+{% endif %}
+{% if runner.runners_docker_disable_entrypoint_overwrite is defined %}
+# Disable the image entrypoint overwriting.
+disable_entrypoint_overwrite = {{ runner.runners_docker_disable_entrypoint_overwrite | string | map('lower') | join }}
+{% endif %}
+{% if runner.runners_docker_dns is defined %}
+# A list of DNS servers for the container to use.
+dns = {{ runner.runners_docker_dns }}
+{% endif %}
+{% if runner.runners_docker_dns_search is defined %}
+# A list of DNS search domains.
+dns_search = {{ runner.runners_docker_dns_search }}
+{% endif %}
+{% if runner.runners_docker_extra_hosts is defined %}
+# Hosts that should be defined in container environment.
+extra_hosts = {{ runner.runners_docker_extra_hosts }}
+{% endif %}
+{% if runner.runners_docker_gpus is defined %}
+# GPU devices for Docker container. Uses the same format as the docker CLI. View details in the Docker documentation.
+gpus = {{ runner.runners_docker_gpus }}
+{% endif %}
+{% if runner.runners_docker_group_add is defined %}
+# Add additional groups for the container process to run.
+group_add = {{ runner.runners_docker_group_add }}
+{% endif %}
+{% if runner.runners_docker_helper_image is defined %}
+# (Advanced) The default helper image used to clone repositories and upload artifacts.
+helper_image = "{{ runner.runners_docker_helper_image }}"
+{% endif %}
+{% if runner.runners_docker_helper_image_flavor is defined %}
+# Sets the helper image flavor (alpine, alpine3.18, alpine3.19, alpine3.21, alpine-latest, ubi-fips or ubuntu). Defaults to alpine. The alpine flavor uses the same version as alpine3.21.
+helper_image_flavor = "{{ runner.runners_docker_helper_image_flavor }}"
+{% endif %}
+{% if runner.runners_docker_helper_image_autoset_arch_and_os is defined %}
+# Uses the underlying OS to set the Helper Image architecture and OS.
+helper_image_autoset_arch_and_os = {{ runner.runners_docker_helper_image_autoset_arch_and_os }}
+{% endif %}
+{% if runner.runners_docker_host is defined %}
+# Custom Docker endpoint. Default is DOCKER_HOST environment or unix:///var/run/docker.sock.
+host = {{ runner.runners_docker_host }}
+{% endif %}
+{% if runner.runners_docker_image is defined %}
+# The image to run jobs with.
+image = "{{ runner.runners_docker_image }}"
+{% endif %}
+{% if runner.runners_docker_links is defined %}
+# Containers that should be linked with container that runs the job.
+links = {{ runner.runners_docker_links }}
+{% endif %}
+{% if runner.runners_docker_memory is defined %}
+# The memory limit. A string.
+memory = "{{ runner.runners_docker_memory }}"
+{% endif %}
+{% if runner.runners_docker_memory_limit is defined %}
+# The total memory limit. A string.
+memory_swap = "{{ runner.runners_docker_memory_limit }}"
+{% endif %}
+{% if runner.runners_docker_memory_reservation is defined %}
+# The memory soft limit. A string.
+memory_reservation = "{{ runner.runners_docker_memory_reservation }}"
+{% endif %}
+{% if runner.runners_docker_network_mode is defined %}
+# add container to a custom network.
+network_mode = {{ runner.runners_docker_network_mode }}
+{% endif %}
+{% if runner.runners_docker_mac_address is defined %}
+# Container MAC address
+mac_address = "{{ runner.runners_docker_mac_address }}"
+{% endif %}
+{% if runner.runners_docker_oom_kill_disable is defined %}
+# If an out-of-memory (OOM) error occurs, do not terminate processes in a container.
+oom_kill_disable = {{ runner.runners_docker_oom_kill_disable | string | map('lower') | join}}
+{% endif %}
+{% if runner.runners_docker_oom_score_adjust is defined %}
+# OOM score adjustment. Positive means terminate the processes earlier.
+oom_score_adjust = {{ runner.runners_docker_oom_score_adjust }}
+{% endif %}
+{% if runner.runners_docker_oom_score_privileged is defined %}
+# Make the container run in privileged mode. Insecure.
+privileged = {{ runner.runners_docker_oom_score_privileged | string | map('lower') | join }}
+{% endif %}
+{% if runner.runners_docker_services_privileged is defined %}
+# Allow services to run in privileged mode. If unset (default) privileged value is used instead. Use with the Docker executor. Insecure.
+services_privileged = {{ runner.runners_docker_services_privileged | string | map('lower') | join }}
+{% endif %}
+{% if runner.runners_docker_pull_policy is defined %}
+# The image pull policy: never, if-not-present or always (default). View details in the pull policies documentation. You can also add multiple pull policies, retry a failed pull, or restrict pull policies.
+pull_policy = "{{ runner.runners_docker_pull_policy }}"
+{% endif %}
+{% if runner.runners_docker_runtime is defined %}
+# The runtime for the Docker container.
+runtime = "{{ runner.runners_docker_runtime }}"
+{% endif %}
+{% if runner.runners_docker_isolation is defined %}
+# Container isolation technology (default, hyperv and process). Windows only.
+isolation = {{ runner.runners_docker_isolation }}
+{% endif %}
+{% if runner.runners_docker_security_opt is defined %}
+# Security options (–security-opt in docker run). Takes a list of : separated key/values.
+security_opt = "{{ runner.runners_docker_security_opt }}"
+{% endif %}
+{% if runner.runners_docker_shm_size is defined %}
+# Shared memory size for images (in bytes).
+shm_size = {{ runner.runners_docker_shm_size }}
+{% endif %}
+{% if runner.runners_docker_sysctls is defined %}
+# The sysctl options.
+sysctls = {{ runner.runners_docker_sysctls }}
+{% endif %}
+{% if runner.runners_docker_tls_cert_path is defined %}
+# A directory where ca.pem, cert.pem or key.pem are stored and used to make a secure TLS connection to Docker. Use this setting with boot2docker.
+tls_cert_path = "{{ runner.runners_docker_tls_cert_path }}"
+{% endif %}
+{% if runner.runners_docker_tls_verify is defined %}
+# Enable or disable TLS verification of connections to the Docker daemon. Disabled by default. By default, GitLab Runner connects to the Docker Unix socket over SSH. The Unix socket does not support RTLS and communicates over HTTP with SSH to provide encryption and authentication. Enabling tls_verify is not typically needed and requires additional configuration. To enable tls_verify, the daemon must listen on a port (rather than the default Unix socket) and the GitLab Runner Docker host must use the address the daemon is listening on.
+tls_verify = {{ runner.runners_docker_tls_verify | string | map('lower') | join }}
+{% endif %}
+{% if runner.runners_docker_user is defined %}
+# Run all commands in the container as the specified user.
+user = "{{ runner.runners_docker_user }}"
+{% endif %}
+{% if runner.runners_docker_userns_mode is defined %}
+# The user namespace mode for the container and Docker services when user namespace remapping option is enabled. Available in Docker 1.10 or later.
+userns_mode = {{ runner.runners_docker_userns_mode }}
+{% endif %}
+{% if runner.runners_docker_ulimit is defined %}
+# Ulimit values that are passed to the container. Uses the same syntax as the Docker --ulimit flag.
+ulimit = {{ runner.runners_docker_ulimit }}
+{% endif %}
+{% if runner.runners_docker_volumes is defined %}
+# Additional volumes that should be mounted. Same syntax as the Docker -v flag.
+volumes = {{ runner.runners_docker_volumes }}
+{% endif %}
+{% if runner.runners_docker_volumes_from is defined %}
+# A list of volumes to inherit from another container in the form <container name>[:<access_level>]. Access level defaults to read-write, but can be manually set to ro (read-only) or rw (read-write).
+volumes_from = {{ runner.runners_docker_volumes_from }}
+{% endif %}
+{% if runner.runners_docker_volume_driver is defined %}
+# The volume driver to use for the container.
+volume_driver = {{ runner.runners_docker_volume_driver }}
+{% endif %}
+ 
+{% if gitlab_runner.wait_for_services_timeout is defined %}
+# How long to wait for Docker services. Set to -1 to disable. Default is 30.
+wait_for_services_timeout = {{ runner.runners_docker_wait_for_services_timeout }}
+{% endif %}
+{% if runner.runners_docker_container_labels is defined %}
+# A set of labels to add to each container created by the runner. The label value can include environment variables for expansion.
+container_labels = {{ runner.runners_docker_container_labels }}
+{% endif %}
+{% if runner.runners_docker_services_limit is defined %}
+# Set the maximum allowed services per job. -1 (default) means there is no limit.
+services_limit = {{ runner.runners_docker_services_limit }}
+{% endif %}
+{% if runner.runners_docker_service_cpuset_cpus is defined %}
+# String value containing the cgroups CpusetCpus to use for a service.
+service_cpuset_cpus = {{ runner.runners_docker_service_cpuset_cpus }}
+{% endif %}
+{% if runner.runners_docker_service_cpuset_cpus is defined %}
+# Number of CPU shares used to set a service’s relative CPU usage (default: 1024).
+service_cpu_shares = {{ runner.runners_docker_service_cpu_shares is defined }}
+{% endif %}
+{% if runner.runners_docker_service_cpus is defined %}
+# String value of the number of CPUs for a service. Available in Docker 1.13 or later.
+service_cpus = {{ runner.runners_docker_service_cpus }}
+{% endif %}
+{% if runner.runners_docker_service_memory is defined %}
+# String value of the memory limit for a service.
+service_memory = {{ runner.runners_docker_service_memory }}
+{% endif %}
+{% if runner.runners_docker_service_memory_swap is defined %}
+# String value of the total memory limit for a service.
+service_memory_swap = {{ runner.runners_docker_service_memory_swap }}
+{% endif %}
+{% if runner.runners_docker_service_memory_reservation is defined %}
+# String value of the memory soft limit for a service.
+service_memory_reservation = {{ runner.runners_docker_service_memory_reservation }}
+{% endif %}
+{% if runner.runners_docker_services is defined %}
+{% for service in runner.runners_docker_services %}
+[[runners.docker.services]]
+{% if service.name is defined %}
+# The name of the image to be run as a service.
+name = "{{ service.name }}"
+{% endif %}
+{% if service.alias is defined %}
+# Additional alias name that can be used to access the service.
+alias = "{{ service.alias }}"
+{% endif %}
+{% if service.entrypoint is defined %}
+# Command or script that should be executed as the container’s entrypoint. The syntax is similar to the Dockerfile ENTRYPOINT directive, where each shell token is a separate string in the array. Introduced in GitLab Runner 13.6.
+entrypoint = "{{ service.environment }}"
+{% endif %}
+{% if service.command is defined %}
+# Command or script that should be used as the container’s command. The syntax is similar to the Dockerfile CMD directive, where each shell token is a separate string in the array. Introduced in GitLab Runner 13.6.
+command = "{{ service.command }}"
+{% endif %}
+{% if service.environment is defined %}
+# Append or overwrite environment variables for the service container.
+environment = {{ service.environment }}
+{% endif %}
+{% endfor %}
+{% endif %}
+[runners.ssh]
+{% if runner.runners_ssh_host is defined %}
+# Where to connect.
+host = "{{ runner.runners_ssh_host }}"
+{% endif %}
+{% if runner.runners_ssh_port is defined %}
+# Port. Default is 22.
+port = "{{ runner.runners_ssh_port }}"
+{% endif %}
+{% if runner.runners_ssh_user is defined %}
+# Username.
+user = {{ runner.runners_ssh_user }}
+{% endif %}
+{% if runner.runners_ssh_password is defined %}
+# Password.
+password = {{ runner.runners_ssh_password }}
+{% endif %}
+{% if runner.runners_ssh_identity_file is defined %}
+# File path to SSH private key (id_rsa, id_dsa, or id_edcsa). The file must be stored unencrypted.
+identity_file = {{ runner.runners_ssh_identity_file }}
+{% endif %}
+{% if runner.runners_ssh_disable_strict_host_key_checking is defined %}
+# This value determines if the runner should use strict host key checking. Default is true. In GitLab 15.0, the default value, or the value if it’s not specified, is false.
+disable_strict_host_key_checking = {{ runner.runners_ssh_disable_strict_host_key_checking | string | map('lower') | join }}
+{% endif %}
+[runners.custom]
+# The following parameters define configuration for the custom executor.
+{% if runner.runners_custom_config_exec is defined %}
+# Path to an executable, so a user can override some configuration settings before the job starts. These values override the ones set in the [[runners]] section. The custom executor documentation has the full list.
+config_exec = "{{ runner.runners_custom_config_exec }}"
+{% endif %}
+{% if runner.runners_custom_config_args is defined %}
+# First set of arguments passed to the config_exec executable.
+config_args = {{ runner.runners_custom_config_args }}
+{% endif %}
+{% if runner.runners_custom_config_exec_timeout is defined %}
+# Timeout, in seconds, for config_exec to finish execution. Default is 3600 seconds (1 hour).
+config_exec_timeout = {{ runner.runners_custom_config_exec_timeout }}
+{% endif %}
+{% if runner.runners_custom_prepare_exec is defined %}
+# Path to an executable to prepare the environment.
+prepare_exec = "{{ runner.runners_custom_prepare_exec }}"
+{% endif %}
+{% if runner.runners_custom_prepare_args is defined %}
+# First set of arguments passed to the prepare_exec executable.
+prepare_args = {{ runner.runners_custom_prepare_args }}
+{% endif %}
+{% if runner.runners_custom_prepare_exec_timeout is defined %}
+# Timeout, in seconds, for prepare_exec to finish execution. Default is 3600 seconds (1 hour).
+prepare_exec_timeout = {{ runner.runners_custom_prepare_exec_timeout }}
+{% endif %}
+{% if runner.runners_custom_run_exec is defined %}
+#  Required. Path to an executable to run scripts in the environments. For example, the clone and build script.
+run_exec = "{{ runner.runners_custom_run_exec }}"
+{% endif %}
+{% if runner.runners_custom_run_args is defined %}
+# First set of arguments passed to the run_exec executable.
+run_args = {{ runner.runners_custom_run_args }}
+{% endif %}
+{% if runner.runners_custom_cleanup_exec is defined %}
+# Path to an executable to clean up the environment.
+cleanup_exec = "{{ runner.runners_custom_cleanup_exec }}"
+{% endif %}
+{% if runner.runners_custom_cleanup_args is defined %}
+# First set of arguments passed to the cleanup_exec executable.
+cleanup_args = {{ runner.runners_custom_cleanup_args }}
+{% endif %}
+{% if runner.runners_custom_cleanup_exec_timeout is defined %}
+# Timeout, in seconds, for cleanup_exec to finish execution. Default is 3600 seconds (1 hour).
+cleanup_exec_timeout = {{ runner.runners_custom_cleanup_exec_timeout }}
+{% endif %}
+{% if gitlab_runner.funnser_custom_graceful_kill_timeout is defined %}
+# Time to wait, in seconds, for prepare_exec and cleanup_exec if they are terminated (for example, during job cancellation). After this timeout, the process is killed. Default is 600 seconds (10 minutes).
+graceful_kill_timeout = {{ runner.runners_custom_graceful_kill_timeout }}
+{% endif %}
+{% if runner.runners_custom_force_kill_timeout is defined %}
+# Time to wait, in seconds, after the kill signal is sent to the script. Default is 600 seconds (10 minutes).
+force_kill_timeout = {{ runner.runners_custom_force_kill_timeout }}
+{% endif %}
+[runners.cache]
+# The following parameters define the distributed cache feature. View details in the runner autoscale documentation.
+{% if runner.runners_cache_type is defined %}
+# One of: s3, gcs, azure.
+Type = "{{ runner.runners_cache_type }}"
+{% endif %}
+{% if runner.runners_cache_path is defined %}
+# Name of the path to prepend to the cache URL.
+Path =  "{{ runner.runners_cache_path }}"
+{% endif %}
+{% if runner.runners_cache_shared is defined %}
+# Enables cache sharing between runners. Default is false.
+Shared = {{ runner.runners_cache_shared | string | map('lower') | join }}
+{% endif %}
+{% if runner.runners_cache_max_uploaded_archive_size is defined %}
+# Limit, in bytes, of the cache archive being uploaded to cloud storage. A malicious actor can work around this limit so the GCS adapter enforces it through the X-Goog-Content-Length-Range header in the signed URL. You should also set the limit on your cloud storage provider.
+MaxUploadedArchiveSize = {{ runner.runners_cache_max_uploaded_archive_size }}
+{% endif %}
+[runners.cache.gcs]
+{% if runner.runners_cache_gcs_access_id is defined %}
+# Path to the Google JSON key file. Only the service_account type is supported. If configured, this value takes precedence over the AccessID and PrivateKey configured directly in config.toml.
+AccessID = "{{ runner.runners_cache_gcs_access_id }}"
+{% endif %}
+{% if runner.runners_cache_gcs_private_key is defined %}
+# ID of GCP Service Account used to access the storage.
+PrivateKey = "{{ runner.runners_cache_gcs_private_key }}"
+{% endif %}
+{% if runner.runners_cache_gcs_credentials_file is defined %}
+# Private key used to sign GCS requests.
+CredentialsFile = "{{ runner.runners_cache_gcs_credentials_file }}"
+{% endif %}
+{% if runner.runners_cache_gcs_bucket_name is defined %}
+# Name of the storage bucket where cache is stored.
+BucketName = "{{ runner.runners_cache_gcs_bucket_name }}"
+{% endif %}
+[runners.kubernetes]
+{% if runner.runners_kubernetes_host is defined %}
+# Optional. Kubernetes host URL. If not specified, the runner attempts to auto-discovery it.
+host = "{{ runner.runners_kubernetes_host }}"
+{% endif %}
+{% if runner.runners_kubernetes_cert_file is defined %}
+# Optional. Kubernetes auth certificate.
+cert_file = "{{ runner.runners_kubernetes_cert_file }}"
+{% endif %}
+{% if runner.runners_kubernetes_key_file is defined %}
+# Optional. Kubernetes auth private key.
+key_file = "{{ runner.runners_kubernetes_key_file }}"
+{% endif %}
+{% if runner.runners_kubernetes_ca_file is defined %}
+# Optional. Kubernetes auth ca certificate.
+ca_file = "{{ runner.runners_kubernetes_ca_file }}"
+{% endif %}
+{% if runner.runners_kubernetes_image is defined %}
+# Default container image to use for jobs when none is specified.
+image = "{{ runner.runners_kubernetes_image }}"
+{% endif %}
+{% if runner.runners_kubernetes_allowed_images is defined %}
+# Wildcard list of container images that are allowed in .gitlab-ci.yml. If not present all images are allowed (equivalent to ["*/*:*"]). Use with the Docker or Kubernetes executors.
+allowed_images = {{ runner.runners_kubernetes_allowed_images }}
+{% endif %}
+{% if runner.runners_kubernetes_allowed_services is defined %}
+# Wildcard list of services that are allowed in .gitlab-ci.yml. If not present all images are allowed (equivalent to ["*/*:*"]). Use with the Docker or Kubernetes executors.
+allowed_services = {{ runner.runners_kubernetes_allowed_services }}
+{% endif %}
+{% if runner.runners_kubernetes_namespace is defined %}
+# Namespace to run Kubernetes jobs in.
+namespace = "{{ runner.runners_kubernetes_namespace }}"
+{% endif %}
+{% if runner.runners_kubernetes_privileged is defined %}
+# Run all containers with the privileged flag enabled.
+privileged = {{ runner.runners_kubernetes_privileged }}
+{% endif %}
+{% if runner.runners_kubernetes_allow_privilege_escalation is defined %}
+# Optional. Runs all containers with the allowPrivilegeEscalation flag enabled.
+allow_privilege_escalation = {{ runner.runners_kubernetes_allow_privilege_escalation | string | map('lower') | join }}
+{% endif %}
+{% if runner.runners_kubernetes_node_selector is defined %}
+# A table of key=value pairs of string=string. Limits the creation of pods to Kubernetes nodes that match all the key=value pairs.
+node_selector = {{ runner.runners_kubernetes_node_selector }}
+{% endif %}
+{% if runner.runners_kubernetes_image_pull_secrets is defined %}
+# An array of items containing the Kubernetes docker-registry secret names used to authenticate container images pulling from private registries.
+image_pull_secrets = {{ runner.runners_kubernetes_image_pull_secrets }}
+{% endif %}
+{% if runner.runners_kubernetes_logs_base_dir is defined %}
+# Base directory to be prepended to the generated path to store build logs. Introduced in GitLab Runner 17.2.
+logs_base_dir = "{{ runner.runners_kubernetes_logs_base_dir }}"
+{% endif %}
+{% if runner.runners_kubernetes_scripts_base_dir is defined %}
+# Base directory to be prepended to the generated path to store build scripts. Introduced in GitLab Runner 17.2.
+scripts_base_dir = "{{ runner.runners_kubernetes_scripts_base_dir }}"
+{% endif %}
+{% if runner.runners_kubernetes_scripts_service_account is defined %}
+# Default service account that job/executor pods use to communicate with the Kubernetes API.
+service_account = "{{ runner.runners_kubernetes_scripts_service_account }}"
+{% endif %}
+[runners.custom_build_dir]
+{% if runner.runners_custom_build_dir is defined %}
+# Allow user to define a custom build directory for a job.
+enabled = {{ runner.runners_custom_build_dir | string | map('lower') | join }}
+{% endif %}
+{% endfor %} 

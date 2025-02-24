@@ -1,0 +1,107 @@
+---
+- name: Ensure group exists
+  ansible.builtin.group:
+    name: "{{ gitlab_runner_service_group }}"
+    state: present
+    system: yes
+  when: gitlab_runner_create_group == 'yes'
+
+- name: Ensure user exists
+  user:
+    name: "{{ gitlab_runner_service_user }}"
+    state: present
+    group: "{{ gitlab_runner_service_group }}"
+    system: yes
+    shell: /bin/bash
+    home: "{{ gitlab_runner_homedir }}"
+    create_home: yes
+
+- name: Install gitlab-runner packages
+  ansible.builtin.package:
+    name: "{{ gitlab_runner_pkgs }}"
+    state: "{{ gitlab_runner_pkg_state }}"
+  when: gitlab_runner_do_packages
+
+- name: Ensure gitlab runner user homedir exists
+  ansible.builtin.file:
+    path: "{{ gitlab_runner_homedir }}"
+    owner: "{{ gitlab_runner_service_user }}"
+    group: "{{ gitlab_runner_service_group }}"
+  when: gitlab_runner_create_homedir == 'yes'
+
+- name: Install gitlab-runner packages
+  ansible.builtin.package:
+    name: "{{ gitlab_runner_pkgs }}"
+    state: "{{ gitlab_runner_pkg_state }}"
+  when:  gitlab_runner_do_packages 
+
+- name: Ensure config dir has the right permisions
+  ansible.builtin.file:
+    path: "{{ gitlab_runner_config_dir }}"
+    state: directory
+    mode: '0700'
+    owner: "{{ gitlab_runner_service_user }}"
+    group: "{{ gitlab_runner_service_group }}"
+
+- name: Configure GitLab Runner
+  ansible.builtin.template:
+    src: 'config.toml.j2'
+    dest: '{{ gitlab_runner_config_dir }}/config.toml'
+    mode: '0440'
+
+- name: Configure custom options if present
+  ansible.builtin.template:
+    src: 'custom-config.toml.j2'
+    dest: "/etc/gitlab-runner/custom-{{ item.name }}-config.toml"
+    mode: '0440'
+  loop: "{{ gitlab_runner.runners }}"
+  when: item.custom is defined
+
+- name: write auth_runas_validation_script
+  ansible.builtin.copy:
+    src: "validate_user.sh"
+    dest: "{{ item.custom.auth_runas_validation_script }}"
+    mode: '0550'
+  when: item.custom.auth_runas_validation_script is defined
+  loop: "{{ gitlab_runner.runners }}"
+
+- name: install gitlab-runner prep script
+  ansible.builtin.copy:
+    content: "{{ gitlab_runner_prep_script }}"
+    dest: '/opt/gitlab-runner-prep.sh'
+    mode: 'u=rx,g=rx'
+  when: gitlab_runner_prep_script is defined
+
+- name: install gitlab-runner prep script service
+  ansible.builtin.template:
+    dest: "/etc/systemd/system/gitlab-runner-prep.service"
+    src: "gitlab-runner-prep.service.j2"
+    mode: '0770'
+  when: gitlab_runner_prep_script is defined
+
+- name: enable gitlab-runner prep service
+  ansible.builtin.systemd:
+    name: 'gitlab-runner-prep.service'
+    enabled: yes
+    daemon_reload: yes
+  when: gitlab_runner_prep_script is defined and gitlab_runner_enable_prep_service == 'yes'
+
+- name: enable gitlab-runner service
+  ansible.builtin.systemd:
+    name: '{{ gitlab_runner_service }}'
+    enabled: "{{ gitlab_runner_service_onboot }}"
+
+- name: (re)start gitlab-runner prep service
+  ansible.builtin.systemd:
+    name: 'gitlab-runner-prep'
+    state: restarted
+    daemon_reload: true
+  when: gitlab_runner_prep_service_state_start is defined and gitlab_runner_prep_service_state_start == 'yes'
+
+- name: (re)start gitlab-runner service
+  ansible.builtin.systemd:
+    name: '{{ gitlab_runner_service }}'
+    state: restarted
+    daemon_reload: true
+  when:  gitlab_runner_service_state_start 
+

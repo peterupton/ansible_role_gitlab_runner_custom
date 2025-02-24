@@ -1,0 +1,10 @@
+[Unit]
+Description=gitlab-runner prep
+Before={{ gitlab_runner_service }}.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/gitlab-runner-prep.sh
+
+[Install]
+WantedBy=multi-user.target
