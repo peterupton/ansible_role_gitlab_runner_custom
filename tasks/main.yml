@@ -3,6 +3,7 @@
   ansible.builtin.group:
     name: "{{ gitlab_runner_service_group }}"
     state: present
+    gid: "{{ gitlab_runner_service_group_id | default(omit) }}"
     system: yes
   when: gitlab_runner_create_group == 'yes'
 
@@ -11,10 +12,12 @@
     name: "{{ gitlab_runner_service_user }}"
     state: present
     group: "{{ gitlab_runner_service_group }}"
+    uid: "{{ gitlab_runner_service_user_id | default(omit) }}"
     system: yes
     shell: /bin/bash
     home: "{{ gitlab_runner_homedir }}"
     create_home: yes
+  when: gitlab_runner_create_user == 'yes'
 
 - name: Install gitlab-runner packages
   ansible.builtin.package:
@@ -27,7 +30,8 @@
     path: "{{ gitlab_runner_homedir }}"
     owner: "{{ gitlab_runner_service_user }}"
     group: "{{ gitlab_runner_service_group }}"
-  when: gitlab_runner_create_homedir == 'yes'
+    state: directory
+  when: gitlab_runner_create_homedir
 
 - name: Install gitlab-runner packages
   ansible.builtin.package:
@@ -40,8 +44,8 @@
     path: "{{ gitlab_runner_config_dir }}"
     state: directory
     mode: '0700'
-    owner: "{{ gitlab_runner_service_user }}"
-    group: "{{ gitlab_runner_service_group }}"
+    owner: "{{ gitlab_runner_service_user_id | default(gitlab_runner_service_user) }}"
+    group: "{{ gitlab_runner_service_group_id | default(gitlab_runner_service_group) }}"
 
 - name: Configure GitLab Runner
   ansible.builtin.template:
@@ -85,6 +89,12 @@
     enabled: yes
     daemon_reload: yes
   when: gitlab_runner_prep_script is defined and gitlab_runner_enable_prep_service == 'yes'
+
+- name: install gitlab-runner service
+  ansible.builtin.template:
+    dest: "/etc/systemd/system/gitlab-runner.service"
+    src: "gitlab-runner.service.j2"
+    mode: '0770'
 
 - name: enable gitlab-runner service
   ansible.builtin.systemd:

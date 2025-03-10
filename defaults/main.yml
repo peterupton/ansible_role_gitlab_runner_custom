@@ -1,14 +1,14 @@
 ---
 gitlab_runner_config_dir: /etc/gitlab-runner
 gitlab_runner_create_group: yes
-gitlab_runner_create_homedir: no  # don't manually create home directory
+gitlab_runner_create_homedir: no  # don't manualy create homdir
 gitlab_runner_create_user: yes
 gitlab_runner_do_packages: yes  # change to false to make sure that this role does not do package install
 gitlab_runner_enable_prep_service: yes
 gitlab_runner_enable_service: yes
 gitlab_runner_homedir: "/var/lib/gitlab-runner"
 gitlab_runner_pkg_state: installed  # change this to latest if needed, passed to ansible.builtin.package
-gitlab_runner_pkgs: # package name for gitlab runner, add custom executors to this list if needed
+gitlab_runner_pkgs:   # package name for gitlab runner, add custom executors to this list if needed
   - gitlab-runner
 gitlab_runner_prep_service_start: yes  # change to false to make sure that we don't start gitlab-runner prep service (in chroot env for example)
 gitlab_runner_service: gitlab-runner
@@ -16,3 +16,5 @@ gitlab_runner_service_group: gitlab-runner
 gitlab_runner_service_onboot: yes
 gitlab_runner_service_state_start: yes  # change to false to make sure that we don't start gitlab-runner (in chroot env for example) also controls if we restart the service
 gitlab_runner_service_user: gitlab-runner
+gitlab_runner_start_limit_interval_sec: 5
+gitlab_runner_start_limit_burst: 10

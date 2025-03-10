@@ -12,7 +12,7 @@ retain_logs = {{ item.custom.retain_logs | string | map('lower') | join }}
 {% endif %}
 {% if item.custom.custom_build_dir is defined %}
 # Observe the directory specified by a user’s CUSTOM_CI_BUILDS_DIR variable, this will replace any builds directory derived from the data_dir. Jacamar will ensure unique paths and appropriate permissions (700). Does not function in conjunction with root_dir_creation.
-custom_build_dir = "{{ item.custom.custom_build_dir }}"
+custom_build_dir = {{ item.custom.custom_build_dir | string | map('lower') | join }}
 {% endif %}
 # Administrator defined string, (currently) only appears in Jacamar’s system logging capabilities to help distinguish from other instances.
 name = "{{ item.name }}"
@@ -30,7 +30,7 @@ job_message = {{ item.custom.job_message }}
 {% endif %}
 {% if item.custom.gitlab_server is defined %}
 # Trusted URL for GitLab server used in all web interactions, takes priority over any values identified in the job response.
-gitlab_server = {{ item.custom.gitlab_server }}
+gitlab_server = "{{ item.custom.gitlab_server }}"
 {% endif %}
 {% if item.custom.tls_ca_file is defined %}
 # File containing the required certificates for HTTPS actions.

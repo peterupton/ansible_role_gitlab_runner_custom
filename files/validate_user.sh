@@ -1,4 +1,3 @@
 #!/bin/bash
 
-# TODO fill this with your user validation script
-
+# replace with your validate user script
